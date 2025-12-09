@@ -6,26 +6,14 @@ option java_outer_classname = "EmailRequestClass";
 
 message EmailRequest{
   string subject = 1;
-  repeated ToReceiver receivers = 2;
-  repeated ToCCReceiver cc = 3;
-  repeated ToBCCReceiver bcc = 4;
+  repeated string receivers = 2;
+  repeated string cc = 3;
+  repeated string bcc = 4;
   /*main dynamic email body*/
   string emailBodyHtml = 5;
 //  /*option*/
 //  map<string, string> variables = 6;
 
-}
-
-message ToReceiver{
-  string email = 1;
-}
-
-message ToCCReceiver{
-  string email = 1;
-}
-
-message ToBCCReceiver{
-  string email = 1;
 }
 
 message EmailResponse{

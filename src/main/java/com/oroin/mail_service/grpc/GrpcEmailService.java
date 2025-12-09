@@ -20,10 +20,26 @@ public class GrpcEmailService extends EmailServiceGrpc.EmailServiceImplBase {
     public void sendEmail(EmailRequest request, StreamObserver<EmailResponse> responseObserver) {
 
         /*build email template*/
-        templateBuilder.buildEmailTemplate(request.getEmailBodyHtml());
+        String finalEmailHtml = templateBuilder.buildEmailTemplatePure(request.getEmailBodyHtml());
 
         /*send mail*/
-//        emailSenderService.send(request.getReceivers())
+        boolean status = emailSenderService.send(
+                request.getReceiversList(),
+                request.getCcList(),
+                request.getBccList(),
+                request.getSubject(),
+                finalEmailHtml
+        );
+
+        EmailResponse response = EmailResponse.newBuilder()
+                .setCode(status ? 200 : 500)
+                .setSuccess(status)
+                .setMessage(status ? "Successfully send mail" : "Failed to send mail due to error")
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+
     }
 
 }

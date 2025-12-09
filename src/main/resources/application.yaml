@@ -1,12 +1,15 @@
-grpc:
-  server:
-    port: 9090
-    security:
-      enabled: false
-
+server:
+  port: 8081
+  http2:
+    enabled: true
 spring:
   application:
     name: mail-service
+  grpc:
+    server:
+      port: 9090
+      security:
+        enabled: false
   profiles:
     active: prod
   # database config
@@ -25,18 +28,17 @@ spring:
 
 # Outlook SMTP config
   mail:
-    host: smtp-mail.outlook.com
+    host: smtp.office365.com
     port: 587
     username: ${MAIL_USER}
     password: ${MAIL_PASSWORD}
     properties:
       mail:
         protocol: smtp
-        tls: true
         smtp:
-          auth: ture
+          auth: true
           starttls:
-            enable: ture
+            enable: true
             required: true
           connectiontimeout: 5000
           timeout: 5000

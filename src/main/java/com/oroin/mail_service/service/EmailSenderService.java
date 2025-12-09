@@ -1,6 +1,8 @@
 package com.oroin.mail_service.service;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -8,6 +10,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,15 +20,49 @@ public class EmailSenderService {
 
     public boolean send(List<String> to, List<String> cc, List<String> bcc, String subject, String html) {
         try {
+            InternetAddress[] addressTo = to.stream()
+                    .map(email -> {
+                        try {
+                            return new InternetAddress(email);
+                        } catch (AddressException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .toArray(InternetAddress[]::new);
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
             helper.setSubject(subject);
-            helper.setTo(to.toArray(new String[0]));
+            helper.setFrom(new InternetAddress("nyinyimyintmyat@cp.com.mm"));
 
-            if (cc != null && !cc.isEmpty()) helper.setCc(cc.toArray(new String[0]));
-            if (bcc != null && !bcc.isEmpty()) helper.setBcc(bcc.toArray(new String[0]));
+            // Use the trimmed array
+            helper.setTo(addressTo);
 
+            if (cc.size() > 0 && cc != null && !cc.isEmpty()) {
+                InternetAddress[] ccAdd = cc.stream()
+                        .map(email -> {
+                            try {
+                                return new InternetAddress(email);
+                            } catch (AddressException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .toArray(InternetAddress[]::new);
+                helper.setCc(ccAdd);
+            }
+            if (bcc.size() > 0 && bcc != null && !bcc.isEmpty()) {
+                InternetAddress[] bccAddresses = bcc.stream()
+                        .map(email -> {
+                            try {
+                                return new InternetAddress(email);
+                            } catch (AddressException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .toArray(InternetAddress[]::new);
+                helper.setBcc(bccAddresses);
+            }
             helper.setText(html, true);
             mailSender.send(message);
 
