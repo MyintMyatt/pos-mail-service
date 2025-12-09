@@ -5,6 +5,7 @@ import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class EmailSenderService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
+            helper.addInline("companyLogo", new ClassPathResource("static/logo.jpg"));
             helper.setSubject(subject);
             helper.setFrom(new InternetAddress("nyinyimyintmyat@cp.com.mm"));
 
