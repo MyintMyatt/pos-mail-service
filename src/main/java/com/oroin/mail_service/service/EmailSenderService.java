@@ -34,7 +34,6 @@ public class EmailSenderService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            helper.addInline("companyLogo", new ClassPathResource("static/logo.jpg"));
             helper.setSubject(subject);
             helper.setFrom(new InternetAddress("nyinyimyintmyat@cp.com.mm"));
 
@@ -66,6 +65,7 @@ public class EmailSenderService {
                 helper.setBcc(bccAddresses);
             }
             helper.setText(html, true);
+            helper.addInline("companyLogo", new ClassPathResource("static/logo.jpg"));
             mailSender.send(message);
 
             // return success;
