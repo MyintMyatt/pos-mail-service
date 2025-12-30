@@ -60,11 +60,16 @@ logging:
     root: INFO
   # custom property
   kafka:
-    topic: mail-service-logs
-#  structured:
-#    format:
-#      console: ecs
-#  file:
-#    name: mail-service-log.json
+    bootstrap-servers: 192.168.240.52:9093,192.168.240.34:9093,192.168.245.118:9093
+    topic: logs-topic
+    username: log-producer
+    password: log-producer@2025
+    #security mTLS
+    ssl-truststore-location: ./security/client.truststore.jks
+    ssl-truststore-password: password
+    ssl-keystore-location: ./security/client.keystore.jks
+    ssl-keystore-password: password
+
+
 
 

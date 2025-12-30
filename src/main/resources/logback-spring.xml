@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+
+    <springProperty scope="context" name="kafka-host" source="logging.kafka.bootstrap-servers"/>
+    <springProperty scope="context" name="kafka-user" source="logging.kafka.username"/>
+    <springProperty scope="context" name="kafka-pass" source="logging.kafka.password"/>
+    <springProperty scope="context" name="ts-loc" source="logging.kafka.ssl-truststore-location"/>
+    <springProperty scope="context" name="ts-pwd" source="logging.kafka.ssl-truststore-password"/>
+    <springProperty scope="context" name="ks-loc" source="logging.kafka.ssl-keystore-location"/>
+    <springProperty scope="context" name="ks-pwd" source="logging.kafka.ssl-keystore-password"/>
+
     <!-- Console appender for local development -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
@@ -11,7 +20,23 @@
         <topic>logs-topic</topic>  <!-- Your Kafka topic name -->
         <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy"/> <!-- Optional: no key -->
         <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy"/> <!-- Async to avoid blocking -->
-        <producerConfig>bootstrap.servers=localhost:9092</producerConfig> <!-- Your Kafka bootstrap servers -->
+        <producerConfig>bootstrap.servers=${kafka-host}</producerConfig>
+
+        <!--security config-->
+        <producerConfig>security.protocol=SASL_SSL</producerConfig>
+        <producerConfig>sasl.mechanism=SCRAM-SHA-512</producerConfig>
+
+        <producerConfig>ssl.truststore.location=${ts-loc}</producerConfig>
+        <producerConfig>ssl.truststore.password=${ts-pwd}</producerConfig>
+        <producerConfig>ssl.keystore.location=${ks-loc}</producerConfig>
+        <producerConfig>ssl.keystore.password=${ks-pwd}</producerConfig>
+        <producerConfig>ssl.key.password=${ks-pwd}</producerConfig>
+<!--        <producerConfig>ssl.truststore.type=PKCS12/producerConfig>-->
+
+        <producerConfig>
+            sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka-user}" password="${kafka-pass}";
+        </producerConfig>
+        <producerConfig>ssl.endpoint.identification.algorithm=</producerConfig>
         <!-- Additional producer configs (optional, e.g., for reliability) -->
         <producerConfig>acks=1</producerConfig>
         <producerConfig>retries=3</producerConfig>
