@@ -1,175 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="false" debug="false">
+<configuration>
 
-    <!-- ============================= -->
-    <!-- Spring properties            -->
-    <!-- ============================= -->
-    <springProperty scope="context" name="KAFKA_BOOTSTRAP" source="logging.kafka.bootstrap-servers"/>
-    <springProperty scope="context" name="KAFKA_USERNAME" source="logging.kafka.username"/>
-    <springProperty scope="context" name="KAFKA_PASSWORD" source="logging.kafka.password"/>
+    <shutdownHook class="ch.qos.logback.core.hook.DefaultShutdownHook"/>
 
-    <springProperty scope="context" name="TRUSTSTORE_LOCATION" source="logging.kafka.ssl-truststore-location"/>
-    <springProperty scope="context" name="TRUSTSTORE_PASSWORD" source="logging.kafka.ssl-truststore-password"/>
-    <springProperty scope="context" name="KEYSTORE_LOCATION" source="logging.kafka.ssl-keystore-location"/>
-    <springProperty scope="context" name="KEYSTORE_PASSWORD" source="logging.kafka.ssl-keystore-password"/>
+    <springProperty scope="context" name="service-name" source="spring.application.name"/>
+    <springProperty scope="context" name="kafka-host" source="logging.kafka.bootstrap-servers"/>
+    <springProperty scope="context" name="kafka-user" source="logging.kafka.username"/>
+    <springProperty scope="context" name="kafka-pass" source="logging.kafka.password"/>
+    <springProperty scope="context" name="ts-loc" source="logging.kafka.ssl-truststore-location"/>
+    <springProperty scope="context" name="ts-pwd" source="logging.kafka.ssl-truststore-password"/>
+    <springProperty scope="context" name="ks-loc" source="logging.kafka.ssl-keystore-location"/>
+    <springProperty scope="context" name="ks-pwd" source="logging.kafka.ssl-keystore-password"/>
 
-<!--    <springProperty scope="context" name="kafka-host" source="logging.kafka.bootstrap-servers"/>-->
-<!--    <springProperty scope="context" name="kafka-user" source="logging.kafka.username"/>-->
-<!--    <springProperty scope="context" name="kafka-pass" source="logging.kafka.password"/>-->
-<!--    <springProperty scope="context" name="ts-loc" source="logging.kafka.ssl-truststore-location"/>-->
-<!--    <springProperty scope="context" name="ts-pwd" source="logging.kafka.ssl-truststore-password"/>-->
-<!--    <springProperty scope="context" name="ks-loc" source="logging.kafka.ssl-keystore-location"/>-->
-<!--    <springProperty scope="context" name="ks-pwd" source="logging.kafka.ssl-keystore-password"/>-->
-
-    <springProperty scope="context" name="APP_NAME" source="spring.application.name"/>
-
-    <!-- ============================= -->
-    <!-- Console (local & fallback)   -->
-    <!-- ============================= -->
+    <!-- Console appender for local development -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>
-                {
-                "service":"${APP_NAME}",
-                "environment":"prod"
-                }
-            </customFields>
-        </encoder>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 
-    <!-- ============================= -->
-    <!-- Kafka Appender (SYNC SEND)   -->
-    <!-- ============================= -->
+    <!-- Kafka appender for sending logs to Kafka (consumed by Logstash) -->
     <appender name="KAFKA" class="com.github.danielwegener.logback.kafka.KafkaAppender">
-
-        <!-- JSON logs for ELK -->
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <customFields>
                 {
-                "service":"${APP_NAME}",
+                "service":"${service-name}",
                 "environment":"prod"
                 }
             </customFields>
         </encoder>
+        <topic>logs-topic</topic>  <!-- Your Kafka topic name -->
+        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy"/> <!-- Optional: no key -->
+        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy"/> <!-- Async to avoid blocking -->
+        <producerConfig>bootstrap.servers=${kafka-host}</producerConfig>
 
-        <topic>logs-topic</topic>
-
-        <!-- Kafka Producer Core -->
-        <producerConfig>bootstrap.servers=${KAFKA_BOOTSTRAP}</producerConfig>
-        <producerConfig>client.id=${APP_NAME}-log-producer</producerConfig>
-
-        <!-- Reliability -->
-        <producerConfig>acks=all</producerConfig>
-        <producerConfig>enable.idempotence=true</producerConfig>
-        <producerConfig>retries=10</producerConfig>
-        <producerConfig>max.in.flight.requests.per.connection=5</producerConfig>
-
-        <!-- Flush safety -->
-        <producerConfig>linger.ms=50</producerConfig>
-        <producerConfig>delivery.timeout.ms=300000</producerConfig>
-        <producerConfig>request.timeout.ms=30000</producerConfig>
-
-        <!-- Security -->
+        <!--security config-->
         <producerConfig>security.protocol=SASL_SSL</producerConfig>
         <producerConfig>sasl.mechanism=SCRAM-SHA-512</producerConfig>
 
-        <producerConfig>ssl.truststore.location=${TRUSTSTORE_LOCATION}</producerConfig>
-        <producerConfig>ssl.truststore.password=${TRUSTSTORE_PASSWORD}</producerConfig>
-        <producerConfig>ssl.keystore.location=${KEYSTORE_LOCATION}</producerConfig>
-        <producerConfig>ssl.keystore.password=${KEYSTORE_PASSWORD}</producerConfig>
-        <producerConfig>ssl.key.password=${KEYSTORE_PASSWORD}</producerConfig>
+        <producerConfig>ssl.truststore.location=${ts-loc}</producerConfig>
+        <producerConfig>ssl.truststore.password=${ts-pwd}</producerConfig>
+        <producerConfig>ssl.keystore.location=${ks-loc}</producerConfig>
+        <producerConfig>ssl.keystore.password=${ks-pwd}</producerConfig>
+        <producerConfig>ssl.key.password=${ks-pwd}</producerConfig>
+<!--        <producerConfig>ssl.truststore.type=PKCS12/producerConfig>-->
 
         <producerConfig>
-            sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USERNAME}" password="${KAFKA_PASSWORD}";
+            sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka-user}" password="${kafka-pass}";
         </producerConfig>
-
-        <!-- IMPORTANT: NO async delivery here -->
+        <producerConfig>ssl.endpoint.identification.algorithm=</producerConfig>
+        <!-- Additional producer configs (optional, e.g., for reliability) -->
+        <producerConfig>acks=1</producerConfig>
+        <producerConfig>retries=3</producerConfig>
     </appender>
 
-    <!-- ============================= -->
-    <!-- Async Wrapper (single layer) -->
-    <!-- ============================= -->
+    <!-- Optional: Wrap Kafka in AsyncAppender for better performance/non-blocking -->
     <appender name="ASYNC_KAFKA" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>10000</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <neverBlock>true</neverBlock>
         <appender-ref ref="KAFKA"/>
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold> <!-- Don't discard when queue full -->
     </appender>
 
-    <!-- ============================= -->
-    <!-- Root Logger                  -->
-    <!-- ============================= -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="ASYNC_KAFKA"/>
+        <appender-ref ref="ASYNC_KAFKA"/>  <!-- Or directly <appender-ref ref="KAFKA"/> -->
     </root>
-
-    <!-- ============================= -->
-    <!-- Shutdown Hook (CRITICAL)     -->
-    <!-- ============================= -->
-    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook">
-        <delay>5000</delay>
-    </shutdownHook>
-
 </configuration>
-
-
-
-        <!--<?xml version="1.0" encoding="UTF-8"?>-->
-<!--<configuration>-->
-
-<!--    <shutdownHook class="ch.qos.logback.core.hook.DefaultShutdownHook"/>-->
-
-<!--    <springProperty scope="context" name="kafka-host" source="logging.kafka.bootstrap-servers"/>-->
-<!--    <springProperty scope="context" name="kafka-user" source="logging.kafka.username"/>-->
-<!--    <springProperty scope="context" name="kafka-pass" source="logging.kafka.password"/>-->
-<!--    <springProperty scope="context" name="ts-loc" source="logging.kafka.ssl-truststore-location"/>-->
-<!--    <springProperty scope="context" name="ts-pwd" source="logging.kafka.ssl-truststore-password"/>-->
-<!--    <springProperty scope="context" name="ks-loc" source="logging.kafka.ssl-keystore-location"/>-->
-<!--    <springProperty scope="context" name="ks-pwd" source="logging.kafka.ssl-keystore-password"/>-->
-
-<!--    &lt;!&ndash; Console appender for local development &ndash;&gt;-->
-<!--    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">-->
-<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>-->
-<!--    </appender>-->
-
-<!--    &lt;!&ndash; Kafka appender for sending logs to Kafka (consumed by Logstash) &ndash;&gt;-->
-<!--    <appender name="KAFKA" class="com.github.danielwegener.logback.kafka.KafkaAppender">-->
-<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>-->
-<!--        <topic>logs-topic</topic>  &lt;!&ndash; Your Kafka topic name &ndash;&gt;-->
-<!--        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy"/> &lt;!&ndash; Optional: no key &ndash;&gt;-->
-<!--        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy"/> &lt;!&ndash; Async to avoid blocking &ndash;&gt;-->
-<!--        <producerConfig>bootstrap.servers=${kafka-host}</producerConfig>-->
-
-<!--        &lt;!&ndash;security config&ndash;&gt;-->
-<!--        <producerConfig>security.protocol=SASL_SSL</producerConfig>-->
-<!--        <producerConfig>sasl.mechanism=SCRAM-SHA-512</producerConfig>-->
-
-<!--        <producerConfig>ssl.truststore.location=${ts-loc}</producerConfig>-->
-<!--        <producerConfig>ssl.truststore.password=${ts-pwd}</producerConfig>-->
-<!--        <producerConfig>ssl.keystore.location=${ks-loc}</producerConfig>-->
-<!--        <producerConfig>ssl.keystore.password=${ks-pwd}</producerConfig>-->
-<!--        <producerConfig>ssl.key.password=${ks-pwd}</producerConfig>-->
-<!--&lt;!&ndash;        <producerConfig>ssl.truststore.type=PKCS12/producerConfig>&ndash;&gt;-->
-
-<!--        <producerConfig>-->
-<!--            sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka-user}" password="${kafka-pass}";-->
-<!--        </producerConfig>-->
-<!--        <producerConfig>ssl.endpoint.identification.algorithm=</producerConfig>-->
-<!--        &lt;!&ndash; Additional producer configs (optional, e.g., for reliability) &ndash;&gt;-->
-<!--        <producerConfig>acks=1</producerConfig>-->
-<!--        <producerConfig>retries=3</producerConfig>-->
-<!--    </appender>-->
-
-<!--    &lt;!&ndash; Optional: Wrap Kafka in AsyncAppender for better performance/non-blocking &ndash;&gt;-->
-<!--    <appender name="ASYNC_KAFKA" class="ch.qos.logback.classic.AsyncAppender">-->
-<!--        <appender-ref ref="KAFKA"/>-->
-<!--        <queueSize>500</queueSize>-->
-<!--        <discardingThreshold>0</discardingThreshold> &lt;!&ndash; Don't discard when queue full &ndash;&gt;-->
-<!--    </appender>-->
-
-<!--    <root level="INFO">-->
-<!--        <appender-ref ref="CONSOLE"/>-->
-<!--        <appender-ref ref="ASYNC_KAFKA"/>  &lt;!&ndash; Or directly <appender-ref ref="KAFKA"/> &ndash;&gt;-->
-<!--    </root>-->
-<!--</configuration>-->
