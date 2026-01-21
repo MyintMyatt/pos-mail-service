@@ -70,6 +70,9 @@ logging:
     ssl-keystore-location: ./security/client.keystore.jks
     ssl-keystore-password: password
 
+current:
+  env: dev
+
 
 
 
