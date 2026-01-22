@@ -7,6 +7,7 @@
     <springProperty scope="context" name="kafka-host" source="logging.kafka.bootstrap-servers"/>
     <springProperty scope="context" name="kafka-user" source="logging.kafka.username"/>
     <springProperty scope="context" name="kafka-pass" source="logging.kafka.password"/>
+    <springProperty scope="context" name="kafka-topic" source="logging.kafka.topic"/>
     <springProperty scope="context" name="ts-loc" source="logging.kafka.ssl-truststore-location"/>
     <springProperty scope="context" name="ts-pwd" source="logging.kafka.ssl-truststore-password"/>
     <springProperty scope="context" name="ks-loc" source="logging.kafka.ssl-keystore-location"/>
@@ -23,11 +24,11 @@
             <customFields>
                 {
                 "service":"${service-name}",
-                "environment":"prod"
+                "environment":"dev"
                 }
             </customFields>
         </encoder>
-        <topic>logs-topic</topic>  <!-- Your Kafka topic name -->
+        <topic>${kafka-topic}</topic>  <!-- Your Kafka topic name -->
         <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy"/> <!-- Optional: no key -->
         <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy"/> <!-- Async to avoid blocking -->
         <producerConfig>bootstrap.servers=${kafka-host}</producerConfig>

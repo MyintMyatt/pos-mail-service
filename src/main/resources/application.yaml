@@ -16,24 +16,11 @@ spring:
   application:
     name: mail-service
   # kafka config
-  kafka:
-    producer:
-      bootstrap-servers: localhost:9092
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer # Serializer for the log message value (JSON string)
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-  # database config
-#  datasource:
-#    url: jdbc:postgresql://localhost:5432/pos_db
-#    username: admin
-#    password: root
-#    driver-class-name: org.postgresql.Driver
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    properties:
-#      hibernate:
-#        dialect: org.hibernate.dialect.PostgreSQLDialect
-#      show_sql: true
+#  kafka:
+#    producer:
+#      bootstrap-servers: localhost:9092
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer # Serializer for the log message value (JSON string)
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 # Outlook SMTP config
   mail:
@@ -61,7 +48,7 @@ logging:
   # custom property
   kafka:
     bootstrap-servers: 192.168.240.52:9093,192.168.240.34:9093,192.168.245.118:9093
-    topic: logs-topic
+    topic: dev.mail-service-logs
     username: log-producer
     password: log-producer@2025
     #security mTLS
