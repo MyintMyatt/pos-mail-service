@@ -15,7 +15,10 @@ public class WelcomeConsumer {
     private static final String USER_REGISTER_FINISHED_TOPIC = "user-registered";
 
     @KafkaListener(topics = "dev.user-registered", groupId = "mail-service")
-    public void consume(UserResponse event){
-        log.info("Received user registration event: {}", event);
+    public void consume(Object event){
+        if (event instanceof  UserResponse e)
+            log.info("Received user registration event: {}", e);
+
+        System.err.println(event.toString());
     }
 }

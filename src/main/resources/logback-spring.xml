@@ -42,7 +42,7 @@
         <producerConfig>ssl.keystore.location=${ks-loc}</producerConfig>
         <producerConfig>ssl.keystore.password=${ks-pwd}</producerConfig>
         <producerConfig>ssl.key.password=${ks-pwd}</producerConfig>
-<!--        <producerConfig>ssl.truststore.type=PKCS12/producerConfig>-->
+        <!--        <producerConfig>ssl.truststore.type=PKCS12/producerConfig>-->
 
         <producerConfig>
             sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${kafka-user}" password="${kafka-pass}";

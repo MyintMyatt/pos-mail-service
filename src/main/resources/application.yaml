@@ -41,21 +41,21 @@ spring:
           writetimeout: 5000
 
 
-# logging
-logging:
-  level:
-    root: INFO
-  # custom property
-  kafka:
-    bootstrap-servers: 192.168.240.52:9093,192.168.240.34:9093,192.168.245.118:9093
-    topic: dev.mail-service-logs
-    username: log-producer
-    password: log-producer@2025
-    #security mTLS
-    ssl-truststore-location: ./security/client.truststore.jks
-    ssl-truststore-password: password
-    ssl-keystore-location: ./security/client.keystore.jks
-    ssl-keystore-password: password
+## logging
+#logging:
+#  level:
+#    root: INFO
+#  # custom property
+#  kafka:
+#    bootstrap-servers: 192.168.240.52:9093,192.168.240.34:9093,192.168.245.118:9093
+#    topic: dev.mail-service-logs
+#    username: log-producer
+#    password: log-producer@2025
+#    #security mTLS
+#    ssl-truststore-location: ./security/client.truststore.jks
+#    ssl-truststore-password: password
+#    ssl-keystore-location: ./security/client.keystore.jks
+#    ssl-keystore-password: password
 
 current:
   env: dev

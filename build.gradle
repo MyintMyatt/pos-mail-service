@@ -41,6 +41,12 @@ dependencies {
 //	implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+// 1. Core Jackson 3 modules (The "tools" group)
+    implementation 'tools.jackson.core:jackson-databind:3.0.0'
+    implementation 'tools.jackson.core:jackson-core:3.0.0'
+
+    // 2. The Annotations (The "com.fasterxml" group - Version 2.20 is for Jackson 3)
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.20'
     /*grpc*/
     implementation 'io.grpc:grpc-services'
 
